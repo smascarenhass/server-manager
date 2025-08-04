@@ -77,6 +77,19 @@ main {
     box-shadow: 0 4px 16px rgba(0,123,255,0.12);
 }
 
+.login-form button:disabled {
+    background: linear-gradient(90deg, #cccccc 60%, #999999 100%);
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+.login-form button:disabled:hover {
+    background: linear-gradient(90deg, #cccccc 60%, #999999 100%);
+    box-shadow: none;
+}
+
 footer {
     background: #f0f0f0;
     color: #888;

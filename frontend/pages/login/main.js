@@ -1,5 +1,32 @@
-const form = document.querySelector('.login-form');
-const submit = document.getElementById('submit');
+console.log('teste');
+
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+
+const submitButton = document.getElementById('submit');
+
+// Função para verificar se o botão deve estar habilitado ou desabilitado
+function checkButtonState() {
+    const usernameValue = usernameInput.value.trim();
+    const passwordValue = passwordInput.value.trim();
+    if (usernameValue === '' || passwordValue === '') {
+        submitButton.disabled = true;
+        submitButton.style.opacity = '0.5';
+        submitButton.style.cursor = 'not-allowed';
+    } else {
+        submitButton.disabled = false;
+        submitButton.style.opacity = '1';
+        submitButton.style.cursor = 'pointer';
+    }
+}
+
+// Verificar estado inicial do botão
+checkButtonState();
+
+// Adicionar listener para verificar mudanças no campo de usuário
+usernameInput.addEventListener('input', checkButtonState);
+passwordInput.addEventListener('input', checkButtonState);
+
 
 const accounts = {
     'username': '123',	
@@ -7,7 +34,7 @@ const accounts = {
 };
 
 // Previne o comportamento padrão do formulário e faz o login ao submeter
-submit.addEventListener("click", (e) => {
+submitButton.addEventListener("click", (e) => {
     e.preventDefault();
     const users = [];
     const username = document.getElementById('username').value;
