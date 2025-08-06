@@ -417,3 +417,284 @@ class SambaService:
         except Exception as e:
             print(f"Erro ao recarregar Samba: {str(e)}")
             return False 
+
+    def create_samba_user(self, username: str, password: str, home_dir: str = None, 
+                     share_path: str = None) -> bool:
+        """
+        Cria usuário completo no Samba:
+        1. Cria usuário no sistema
+        2. Define senha
+        3. Adiciona ao Samba
+        4. Cria diretório da share
+        5. Configura permissões
+        6. Adiciona share no smb.conf
+        
+        Args:
+            username (str): Nome do usuário
+            password (str): Senha do usuário
+            home_dir (str): Diretório home (opcional)
+            share_path (str): Caminho da share (opcional)
+            
+        Returns:
+            bool: True se criado com sucesso
+        """
+        try:
+            import subprocess
+            
+            print(f"Criando usuário completo '{username}'...")
+            
+            # 1. Verificar se usuário já existe
+            if self.user_exists(username):
+                print(f"Usuário '{username}' já existe no sistema!")
+                return False
+            
+            # 2. Criar usuário no sistema
+            home_path = home_dir or f"/home/{username}"
+            result = subprocess.run(
+                ['useradd', '-m', '-d', home_path, username],
+                capture_output=True, text=True
+            )
+            
+            if result.returncode != 0:
+                print(f"Erro ao criar usuário no sistema: {result.stderr}")
+                return False
+            
+            print(f"✅ Usuário '{username}' criado no sistema")
+            
+            # 3. Definir senha
+            result = subprocess.run(
+                ['chpasswd'],
+                input=f"{username}:{password}",
+                text=True,
+                capture_output=True
+            )
+            
+            if result.returncode != 0:
+                print(f"Erro ao definir senha: {result.stderr}")
+                return False
+            
+            print(f"✅ Senha definida para '{username}'")
+            
+            # 4. Adicionar ao Samba
+            result = subprocess.run(
+                ['smbpasswd', '-a', username],
+                input=f"{password}\n{password}\n",
+                text=True,
+                capture_output=True
+            )
+            
+            if result.returncode != 0:
+                print(f"Erro ao adicionar ao Samba: {result.stderr}")
+                return False
+            
+            print(f"✅ Usuário '{username}' adicionado ao Samba")
+            
+            # 5. Criar diretório da share
+            share_dir = share_path or f"/home/server/hdds/main/users/{username}"
+            os.makedirs(share_dir, exist_ok=True)
+            
+            # 6. Configurar permissões do diretório
+            result = subprocess.run(['chown', f"{username}:{username}", share_dir])
+            if result.returncode != 0:
+                print(f"Aviso: Erro ao configurar permissões do diretório")
+            
+            print(f"✅ Diretório da share criado: {share_dir}")
+            
+            # 7. Adicionar share no smb.conf
+            success = self.add_user_share(
+                username=username,
+                path=share_dir,
+                browseable="yes",
+                writable="yes",
+                guest_ok="no",
+                create_mask="0660",
+                directory_mask="0770"
+            )
+            
+            if success:
+                print(f"✅ Share adicionada ao smb.conf")
+                
+                # 8. Testar e recarregar
+                if self.test_config():
+                    if self.reload_samba():
+                        print(f"✅ Usuário '{username}' criado com sucesso!")
+                        return True
+                    else:
+                        print("⚠️ Erro ao recarregar serviço Samba")
+                else:
+                    print("⚠️ Configuração inválida!")
+            else:
+                print(f"❌ Erro ao adicionar share no smb.conf")
+            
+            return False
+            
+        except Exception as e:
+            print(f"Erro ao criar usuário '{username}': {str(e)}")
+            return False
+
+    def remove_samba_user(self, username: str, remove_home: bool = False) -> bool:
+        """
+        Remove usuário completo do Samba:
+        1. Remove do Samba
+        2. Remove do sistema
+        3. Remove share do smb.conf
+        4. Remove diretório (opcional)
+        
+        Args:
+            username (str): Nome do usuário
+            remove_home (bool): Se deve remover diretório home
+            
+        Returns:
+            bool: True se removido com sucesso
+        """
+        try:
+            import subprocess
+            
+            print(f"Removendo usuário completo '{username}'...")
+            
+            # 1. Verificar se usuário existe
+            if not self.user_exists(username):
+                print(f"Usuário '{username}' não existe no sistema!")
+                return False
+            
+            # 2. Remover do Samba
+            result = subprocess.run(
+                ['smbpasswd', '-x', username],
+                capture_output=True, text=True
+            )
+            
+            if result.returncode == 0:
+                print(f"✅ Usuário '{username}' removido do Samba")
+            else:
+                print(f"Aviso: Erro ao remover do Samba: {result.stderr}")
+            
+            # 3. Remover share do smb.conf
+            success = self.remove_user_share(username)
+            if success:
+                print(f"✅ Share removida do smb.conf")
+            
+            # 4. Remover do sistema
+            cmd = ['userdel', '-r'] if remove_home else ['userdel']
+            result = subprocess.run(cmd + [username], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                print(f"✅ Usuário '{username}' removido do sistema")
+            else:
+                print(f"Aviso: Erro ao remover do sistema: {result.stderr}")
+            
+            # 5. Testar e recarregar
+            if self.test_config():
+                if self.reload_samba():
+                    print(f"✅ Usuário '{username}' removido com sucesso!")
+                    return True
+                else:
+                    print("⚠️ Erro ao recarregar serviço Samba")
+            else:
+                print("⚠️ Configuração inválida!")
+            
+            return False
+            
+        except Exception as e:
+            print(f"Erro ao remover usuário '{username}': {str(e)}")
+            return False
+
+    def user_exists(self, username: str) -> bool:
+        """
+        Verifica se um usuário existe no sistema
+        
+        Args:
+            username (str): Nome do usuário
+            
+        Returns:
+            bool: True se o usuário existe
+        """
+        try:
+            import subprocess
+            result = subprocess.run(['id', username], capture_output=True)
+            return result.returncode == 0
+        except:
+            return False
+
+    def list_samba_users(self) -> List[Dict[str, str]]:
+        """
+        Lista todos os usuários Samba (sistema + shares)
+        
+        Returns:
+            List[Dict[str, str]]: Lista de usuários com informações
+        """
+        try:
+            import subprocess
+            
+            # Obter usuários do sistema que têm senha Samba
+            result = subprocess.run(['pdbedit', '-L'], capture_output=True, text=True)
+            samba_users = []
+            
+            if result.returncode == 0:
+                for line in result.stdout.strip().split('\n'):
+                    if line.strip():
+                        username = line.strip()
+                        # Verificar se tem share
+                        has_share = self.user_share_exists(username)
+                        samba_users.append({
+                            'username': username,
+                            'has_share': has_share,
+                            'share_path': self.get_user_share_config(username).get('path', 'N/A') if has_share else 'N/A'
+                        })
+            
+            return samba_users
+            
+        except Exception as e:
+            print(f"Erro ao listar usuários Samba: {str(e)}")
+            return []
+
+    def change_samba_password(self, username: str, new_password: str) -> bool:
+        """
+        Altera a senha de um usuário Samba
+        
+        Args:
+            username (str): Nome do usuário
+            new_password (str): Nova senha
+            
+        Returns:
+            bool: True se alterada com sucesso
+        """
+        try:
+            import subprocess
+            
+            print(f"Alterando senha do usuário '{username}'...")
+            
+            # Verificar se usuário existe
+            if not self.user_exists(username):
+                print(f"Usuário '{username}' não existe!")
+                return False
+            
+            # Alterar senha do sistema
+            result = subprocess.run(
+                ['chpasswd'],
+                input=f"{username}:{new_password}",
+                text=True,
+                capture_output=True
+            )
+            
+            if result.returncode != 0:
+                print(f"Erro ao alterar senha do sistema: {result.stderr}")
+                return False
+            
+            # Alterar senha do Samba
+            result = subprocess.run(
+                ['smbpasswd', username],
+                input=f"{new_password}\n{new_password}\n",
+                text=True,
+                capture_output=True
+            )
+            
+            if result.returncode == 0:
+                print(f"✅ Senha do usuário '{username}' alterada com sucesso!")
+                return True
+            else:
+                print(f"Erro ao alterar senha do Samba: {result.stderr}")
+                return False
+            
+        except Exception as e:
+            print(f"Erro ao alterar senha: {str(e)}")
+            return False 
