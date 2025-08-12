@@ -42,7 +42,16 @@ class SambaService:
         self.environment = environment
         self.config = SambaConfig.get_environment_config(environment)
         self.smb_conf_path = self.config["smb_conf_path"]
-        self.backup_dir = self.config["backup_dir"]
+        
+        # Handle backup directory path
+        backup_dir = self.config["backup_dir"]
+        if backup_dir.startswith('./'):
+            # Convert relative path to absolute path based on project root
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.backup_dir = os.path.join(project_root, backup_dir[2:])
+        else:
+            self.backup_dir = os.path.expanduser(backup_dir)
+            
         self.file_service = FileService()
         
         # Garantir que o diretório de backup existe
@@ -623,22 +632,34 @@ class SambaService:
             List[Dict[str, str]]: Lista de usuários com informações
         """
         try:
-            import subprocess
+            # Ler configuração atual
+            content = self.read_config()
             
-            # Obter usuários do sistema que têm senha Samba
-            result = subprocess.run(['pdbedit', '-L'], capture_output=True, text=True)
+            # Parsear shares existentes
+            shares = self.parse_shares(content)
+            
             samba_users = []
             
-            if result.returncode == 0:
-                for line in result.stdout.strip().split('\n'):
-                    if line.strip():
-                        username = line.strip()
-                        # Verificar se tem share
-                        has_share = self.user_share_exists(username)
+            # Filtrar apenas shares de usuário (excluir [printers], [print$], [homes], etc.)
+            for share_name, config in shares.items():
+                if share_name not in ['global', 'printers', 'print$', 'homes', 'netlogon', 'profiles', 'main']:
+                    # Verificar se é uma share de usuário
+                    if 'valid users' in config:
+                        username = config['valid users']
+                        
+                        # Verificar se usuário existe no sistema
+                        user_exists = self.user_exists(username)
+                        
                         samba_users.append({
                             'username': username,
-                            'has_share': has_share,
-                            'share_path': self.get_user_share_config(username).get('path', 'N/A') if has_share else 'N/A'
+                            'has_share': True,
+                            'share_path': config.get('path', 'N/A'),
+                            'share_name': share_name,
+                            'browseable': config.get('browseable', 'N/A'),
+                            'writable': config.get('writable', 'N/A'),
+                            'read_only': config.get('read only', 'N/A'),
+                            'create_mask': config.get('create mask', 'N/A'),
+                            'directory_mask': config.get('directory mask', 'N/A')
                         })
             
             return samba_users

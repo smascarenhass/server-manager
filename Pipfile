@@ -4,17 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
-uvicorn = "*"
 redis = "*"
 pika = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 alembic = "*"
-python-multipart = "*"
 python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
 python-dotenv = "*"
+fastapi = "*"
+uvicorn = "*"
+python-multipart = "*"
 
 [dev-packages]
 pytest = "*"

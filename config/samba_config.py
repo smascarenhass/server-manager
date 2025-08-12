@@ -19,7 +19,7 @@ class SambaConfig:
         },
         "production": {
             "smb_conf_path": "/etc/samba/smb.conf",
-            "backup_dir": "/var/backups/samba"
+            "backup_dir": "./backups/samba"
         },
         "testing": {
             "smb_conf_path": "/tmp/test_smb.conf",
