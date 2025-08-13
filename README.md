@@ -27,32 +27,6 @@ Eliminar a complexidade do terminal ao administrar servidores, oferecendo uma so
 
 ---
 
-## 🔧 Funcionalidades Esperadas
-
-- [ ] Autenticação de usuários
-- [ ] Adição/remoção de servidores
-- [ ] Execução de comandos pré-definidos
-- [ ] Visualização de logs em tempo real
-- [ ] Monitoramento de serviços (CPU, memória, processos)
-- [ ] Sistema de filas para comandos usando RabbitMQ
-- [ ] Cache de resultados usando Redis
-- [ ] API REST para integração externa
-
----
-
-## 📦 Estrutura de Pastas (prevista)
-
-/server-manager
-│
-├── api/ # Backend Python
-├── frontend/ # Interface em JS
-├── services/ # Microsserviços especializados
-├── docker/ # Configuração de containers
-├── database/ # Migrations e seeders
-└── README.md
-
----
-
 ## ⚙️ Pré-requisitos
 
 - Docker
@@ -63,5 +37,5 @@ Eliminar a complexidade do terminal ao administrar servidores, oferecendo uma so
 ---
 
 📫 Contato
-Desenvolvido por Otávio Mascarenhas / Eric Telhado / Guilherme Trindade
-GitHub: @smascarenhass / @erictelhado / @guicasta009
+Desenvolvido por Otávio Mascarenhas / Eric Telhado
+GitHub: @smascarenhass / @erictelhado
