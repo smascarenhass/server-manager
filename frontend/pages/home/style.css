@@ -152,3 +152,149 @@ footer {
     font-size: 0.98rem;
     letter-spacing: 0.5px;
 }
+
+/* Estilos para os cards de usuários */
+.users-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.user-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.user-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+}
+
+.user-info h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.25rem;
+}
+
+.user-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.user-status.has-share {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.user-status.no-share {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.user-details {
+    margin-bottom: 1rem;
+}
+
+.user-details p {
+    margin: 0.5rem 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.user-details strong {
+    color: #374151;
+}
+
+.share-config {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.share-config h4 {
+    margin: 0 0 0.75rem 0;
+    color: #1f2937;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.25rem 0;
+    font-size: 0.75rem;
+}
+
+.config-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.config-value {
+    color: #374151;
+    font-weight: 600;
+}
+
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+    font-size: 1.125rem;
+}
+
+.error {
+    text-align: center;
+    padding: 3rem;
+    color: #dc2626;
+    font-size: 1.125rem;
+    background: #fef2f2;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+}
+
+@media (max-width: 768px) {
+    .users-container {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .user-card {
+        padding: 1rem;
+    }
+}
